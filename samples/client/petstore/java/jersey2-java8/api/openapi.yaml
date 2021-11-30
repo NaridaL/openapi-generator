@@ -1415,7 +1415,7 @@ components:
       example:
         code: 0
         type: type
-        message: message
+        message: '"me\\ss\nage"'
       properties:
         code:
           format: int32

@@ -29,9 +29,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.openapitools.codegen.CliOption;
 import org.openapitools.codegen.CodegenConstants;
@@ -58,6 +58,7 @@ import org.openapitools.codegen.utils.URLPathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableMap;
 import com.samskivert.mustache.Mustache;
 
 import io.swagger.v3.oas.models.OpenAPI;
@@ -548,18 +549,16 @@ public class SpringCodegen extends AbstractJavaCodegen
                 break;
             }
         }
+    }
 
-        // add lambda for mustache templates
-        additionalProperties.put("lambdaRemoveDoubleQuote", (Mustache.Lambda) (fragment, writer) -> writer
-                .write(fragment.execute().replaceAll("\"", Matcher.quoteReplacement(""))));
-        additionalProperties.put("lambdaEscapeDoubleQuote", (Mustache.Lambda) (fragment, writer) -> writer
-                .write(fragment.execute().replaceAll("\"", Matcher.quoteReplacement("\\\""))));
-        additionalProperties.put("lambdaRemoveLineBreak",
-                (Mustache.Lambda) (fragment, writer) -> writer.write(fragment.execute().replaceAll("\\r|\\n", "")));
+    @Override
+    protected ImmutableMap.Builder<String, Mustache.Lambda> addMustacheLambdas() {
 
-        additionalProperties.put("lambdaTrimWhitespace", new TrimWhitespaceLambda());
-
-        additionalProperties.put("lambdaSplitString", new SplitStringLambda());
+        return super.addMustacheLambdas()
+                .put("escapeJava",
+                        (fragment, writer) -> writer.write(StringEscapeUtils.escapeJava(fragment.execute())))
+                .put("trimWhitespace", new TrimWhitespaceLambda())
+                .put("splitString", new SplitStringLambda());
     }
 
     @Override

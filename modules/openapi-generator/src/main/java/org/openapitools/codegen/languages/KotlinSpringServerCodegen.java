@@ -16,6 +16,7 @@
 
 package org.openapitools.codegen.languages;
 
+import com.github.jknack.handlebars.internal.text.StringEscapeUtils;
 import com.google.common.collect.ImmutableMap;
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Mustache.Lambda;
@@ -430,16 +431,12 @@ public class KotlinSpringServerCodegen extends AbstractKotlinCodegen
         additionalProperties.put("jackson", "true");
 
         // add lambda for mustache templates
-        additionalProperties.put("lambdaEscapeDoubleQuote",
-                (Mustache.Lambda) (fragment, writer) -> writer.write(fragment.execute().replaceAll("\"", Matcher.quoteReplacement("\\\""))));
-        additionalProperties.put("lambdaRemoveLineBreak",
-                (Mustache.Lambda) (fragment, writer) -> writer.write(fragment.execute().replaceAll("\\r|\\n", "")));
     }
 
     @Override
     protected ImmutableMap.Builder<String, Lambda> addMustacheLambdas() {
-        return super.addMustacheLambdas()
-                .put("escapeDoubleQuote", new EscapeLambda("\"", "\\\""));
+        return super.addMustacheLambdas().put("escapeJava",
+                (fragment, writer) -> writer.write(StringEscapeUtils.escapeJava(fragment.execute())));
     }
 
     @Override
@@ -628,22 +625,6 @@ public class KotlinSpringServerCodegen extends AbstractKotlinCodegen
 
     private static String sanitizeDirectory(String in) {
         return in.replace(".", File.separator);
-    }
-
-    // TODO could probably be made more generic, and moved to the `mustache` package if required by other components.
-    private static class EscapeLambda implements Mustache.Lambda {
-        private String from;
-        private String to;
-
-        EscapeLambda(final String from, final String to) {
-            this.from = from;
-            this.to = Matcher.quoteReplacement(to);
-        }
-
-        @Override
-        public void execute(Template.Fragment fragment, Writer writer) throws IOException {
-            writer.write(fragment.execute().replaceAll(from, to));
-        }
     }
 
     /**
